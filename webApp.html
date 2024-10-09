@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Bin Dashboard</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>   
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family:sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 100%;
+      height: auto;
+      margin: 20px auto;
+      padding: 20px;
+      box-sizing: border-box;
+      max-height: 100vh;
+    }
+
+    .row {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      flex-wrap: wrap;
+        
+    }
+
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 5px;
+      margin: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      justify-content: center;
+      max-height: fit-content;
+    }
+
+    .card1 {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 5px;
+      margin: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      justify-content: center;
+      height: 50vh;
+    }
+
+    .card2 {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 5px;
+      margin: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      justify-content: center;
+      max-height: 50vh;
+      width: 100%;
+    }
+
+    .card3 {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 5px;
+      margin: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      justify-content: center;
+      height: 25vh;
+    }
+
+    .card4 {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 5px;
+      margin-right: 10px;
+      margin-top: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      flex-direction: column;
+      justify-content: center;
+      width: 30%;
+      height: 50vh;
+    }
+
+    .card5 {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 5px;
+      margin-left: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      justify-content: center;  
+    }
+    .card6 {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 5px;
+      margin-left: 10px;
+      margin-top: 0px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      justify-content: center;
+      max-height: 20vh;
+      overflow-y: scroll; 
+    }
+
+    .card-header {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+    }
+
+    .header {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      font-weight: bold;
+    }
+
+    .chart-container {
+      width: 100%;
+      height: 43vh;
+    }
+
+    .bin-icon {
+      max-width: 100%;
+      height: 20vh;
+    }
+
+    .cleanliness-options {
+      display: flex;
+      flex-direction: row;
+      margin-top: 15px;
+      margin-bottom: 15px;
+      justify-content: space-between;
+      font-size:30px;
+    }
+
+    .cleanliness-option {
+      display: flex;
+      justify-content: space-evenly;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+      font-size:20px;
+      font-weight:normal;
+    }
+
+    .cleanliness-options.highlight {
+      background-color: #17b970;
+    }
+
+    .current-status {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .status-item {
+      text-align: left;
+      margin:   10px;
+    }
+    @media (max-width: 200px) {
+  .bin-icon {
+    height: 15vh; /* Adjust height for smaller screens */
+  }
+}
+    @media (max-width: 200px) {
+      .card,.card1,.card2,.card3,.card4,.card5,.card-header,.row {
+        margin: 10px 10px;
+      }
+     
+
+      .current-status {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .status-item {
+        text-align: center;
+      }
+    }
+    .span{
+      display: flex;
+    }
+
+    /* Style for clear data button */
+    .btn-clear {
+      margin-top: 10px;
+    }
+    .buttons{
+          border: none;
+          background-color:#CFFBE2;
+          height: 50px;
+          width: 50px;
+          border-radius:22px;
+          transition: background-color 0.3s;
+      }
+    .bin_buttons{
+      border: none;
+          background-color:#CFFBE2;
+          height: 40px;
+          min-width: 100%;
+          border-radius:22px;
+          transition: background-color 0.3s;
+          margin-bottom: 10px;
+          margin-top: 5px;
+      }
+      .buttons.highlight{
+          background-color: #005964;
+      }
+      .bins-switching {
+  display: flex;
+  justify-content:space-between;
+  width: 100%;
+  flex-direction:column;
+  font-size:20px; 
+}
+#create-bin-button{
+  margin-top: 20px;
+  border: none;
+  background-color:#dc3545 ;
+  color: white;
+  border-radius: 5px;
+  padding: 10px;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+#create-bin-button:hover{
+  background-color: #942732;}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        Smart Bin No. 1 @ Location
+      </div>
+      <div class="row">
+        <div class="col 1fr ">
+          <div class="card1">
+            <div class="header">
+              Bin level %
+            </div>
+            <div class="chart-container">
+              <canvas id="binLevelChart"></canvas>
+            </div>
+          </div>
+        </div>      
+        <div class="col 1fr  justify-content-center  ">
+          <div class="card2">
+          <img src="https://img.freepik.com/free-vector/blue-trash-can-with-lid-ecology-sign-green-leaves-background_1268-15043.jpg?t=st=1727670209~exp=1727673809~hmac=878afe587235143840375022778aa90f633bd4b9c2e022acc53b9817a9b66ca7&w=1060" alt="Bin Icon" class="bin-icon">
+            <div class="card3">
+            <div class="header">
+              <p>Current condition</p>
+            </div>
+            <div class="card-body">
+             <p><span id="current-level"></span></p>
+              
+              <button class="btn btn-danger btn-clear" id="clear-data-button">Clear Data</button>
+              
+              
+            </div>
+            </div>
+          </div>
+      </div>
+      
+      <div class="card4">
+        <div class="col 1fr  justify-content-center  ">
+            <div class="card5">
+              <div class="card-header">
+                Bin cleanness
+              </div>
+              
+              <div class="cleanliness-options">
+                
+                  <button class="buttons" id="cleanliness-dirty"></button>
+                  <span>Dirty</span>
+                
+                
+                
+                <button class="buttons" id="cleanliness-clean"></button>
+                  <span>Clean</span>
+                
+                
+              </div>
+            </div>
+          
+        
+            <div class="card-header">
+              Bins
+            </div>
+            <div class="card6" title="Bins">
+              <div class="col 1fr  justify-content-center  ">
+
+              <div class="bins-switching">            
+            </div>
+          </div>
+          </div>
+        
+          <!--  <button id="create-bin-button">Create New Bin</button> -->
+    </div>
+      </div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+  <p>Design By: Tharapi Myo</p>
+
+  <script>
+    $(document).ready(function () {
+        var binLevelChartCtx = document.getElementById('binLevelChart').getContext('2d');
+        var chart = new Chart(binLevelChartCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Bin Level',
+                    data: [],
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    
+        var socket;
+        var heartbeatInterval;
+        var heartbeatTimeout;
+        var reconnectDelay = 3000; // 1 second
+        var currentBinID = null; // Variable to track the currently selected bin
+    
+        function initWebSocket() {
+    // Initialize a WebSocket connection to the ESP32 server
+    socket = new WebSocket('ws://esp32.local:8080'); // Ensure to use 'ws://' for WebSocket
+
+    // Event handler for when the connection is opened
+    socket.onopen = function () {
+        console.log("WebSocket connection opened");
+        sendHeartbeat(); // Start sending heartbeat messages
+    };
+
+    // Event handler for receiving messages
+    socket.onmessage = function (event) {
+        console.log('Message received:', event.data);
+
+        // Check if the message is a connection acknowledgment
+        if (event.data === "Connected") {
+            console.log("Heartbeat acknowledgment received");
+            clearTimeout(heartbeatTimeout);
+            sendHeartbeat(); // Send the heartbeat
+        } else {
+            try {
+                // Parse the incoming message
+                const message = JSON.parse(event.data);
+
+                // Get current timestamp
+                const now = new Date();
+                const date = now.toLocaleDateString('en-GB');
+                const time = now.toLocaleTimeString('en-GB', {
+                    hour: '2-digit',
+                    minute: "2-digit",
+                    hour12: true
+                }).replace(':', '.');
+                const timestamp = `${date} ${time}`;
+
+                // Extract values from the message
+                const value = parseFloat(message["bin level"]);
+                const modelPrediction = message["model prediction"]; // Fix the key according to your JSON structure
+                const ID = message["bin ID"]; // Fix the key according to your JSON structure
+
+                // Save data for the specific bin ID
+                saveDataToLocalStorage(timestamp, value, ID, modelPrediction);
+
+                // Automatically create a button if it doesn't exist for the new bin
+                createOrUpdateBinButton(ID);
+
+                // Only update the chart if the current bin ID matches the new data's ID
+                if (ID === currentBinID) {
+                    updateChart(ID, value);
+                    updateCleanlinessOptions(ID);
+                }
+            } catch (error) {
+                console.log("Error parsing JSON message: " + error.message);
+            }
+        }
+    };
+
+    // Event handler for when the connection is closed
+    socket.onclose = function () {
+        console.log("WebSocket connection closed, reconnecting...");
+        setTimeout(initWebSocket, reconnectDelay); // Attempt to reconnect after a delay
+    };
+
+    // Event handler for errors
+    socket.onerror = function (error) {
+        console.log("WebSocket error: " + error.message);
+    };
+}
+
+// Function to send a heartbeat message to the server
+function sendHeartbeat() {
+    if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: "heartbeat" }));
+        console.log("Heartbeat sent");
+        heartbeatTimeout = setTimeout(function () {
+            console.log("Heartbeat timeout, reconnecting...");
+            socket.close(); // Close the socket to trigger the onclose event
+        }, 5000); // Wait 5 seconds for the acknowledgment
+    }
+}
+    
+        function saveDataToLocalStorage(timestamp, value, ID, model_prediction) {
+            try {
+                var binData = JSON.parse(localStorage.getItem(`binData_${ID}`)) || { labels: [], values: [] };
+                var model_prediction_saved = JSON.parse(localStorage.getItem(`model_prediction_${ID}`)) || { latest: null };
+    
+                if (binData.labels.length >= 10) {
+                    binData.labels.shift();
+                    binData.values.shift();
+                }
+    
+                binData.labels.push(timestamp);
+                binData.values.push(value);
+    
+                model_prediction_saved.latest = model_prediction;
+    
+                localStorage.setItem(`binData_${ID}`, JSON.stringify(binData));
+                localStorage.setItem(`model_prediction_${ID}`, JSON.stringify(model_prediction_saved));
+            } catch (error) {
+                console.log("Error saving data to localStorage: " + error.message);
+            }
+        }
+    
+        function updateChart(ID) {
+            var binData = JSON.parse(localStorage.getItem(`binData_${ID}`)) || { labels: [], values: [] };
+    
+            if (chart) {
+                chart.data.labels = binData.labels;
+                chart.data.datasets[0].data = binData.values;
+                chart.update();
+            }
+    
+            $('#current-level').text("Current level for bin "+ID+": "+binData.values[binData.values.length - 1] +"%"|| 'N/A');
+        }
+    
+        function updateCleanlinessOptions(ID) {
+            var model_prediction_data = JSON.parse(localStorage.getItem(`model_prediction_${ID}`)) || { latest: null };
+            var model_prediction = model_prediction_data.latest;
+    
+            $('.buttons').removeClass('highlight');
+    
+            if (model_prediction === "clean") {
+                $('#cleanliness-clean').addClass('highlight');
+            } else if (model_prediction === "dirty") {
+                $('#cleanliness-dirty').addClass('highlight');
+            }
+        }
+    
+        function createOrUpdateBinButton(ID) {
+    const binsSwitching = document.querySelector('.bins-switching');
+
+    // Check if button for this bin already exists
+    let binButton = document.querySelector(`.bins-switching button[data-id="${ID}"]`);
+
+    if (!binButton) {
+        // If the button doesn't exist, create a new one
+        binButton = document.createElement('button');
+        binButton.classList.add('bin_buttons');
+        binButton.setAttribute('data-id', ID);
+        binButton.textContent = `Bin ${ID}`; // Display bin ID
+        binsSwitching.appendChild(binButton);
+
+        // Add click event to update the chart for this bin
+        binButton.addEventListener('click', function() {
+            currentBinID = ID; // Set the current bin ID
+            updateChart(ID); // Update chart data for this bin
+            updateCleanlinessOptions(ID); // Highlight cleanliness options for this bin
+        });
+
+        // Save the new bin ID to localStorage
+        let savedBins = JSON.parse(localStorage.getItem('bins')) || [];
+        if (!savedBins.includes(ID)) {
+            savedBins.push(ID);
+            localStorage.setItem('bins', JSON.stringify(savedBins));
+        }
+    }
+
+    // Sort the buttons after adding/updating
+    sortBinButtons();
+}
+
+function sortBinButtons() {
+    const binsSwitching = $('.bins-switching');
+    const binButtons = $('.bin_buttons').sort((a, b) => {
+        return parseInt($(a).data('id')) - parseInt($(b).data('id'));
+    });
+
+    // Clear the current container and append the sorted buttons
+    binsSwitching.empty();
+    binButtons.each(function() {
+        binsSwitching.append($(this));
+    });
+}
+
+    
+        $('#clear-data-button').on('click', function () {
+            localStorage.clear();
+            $('.buttons').removeClass('highlight');
+            $('.bins-switching').empty();
+            chart.data.labels = [];
+            chart.data.datasets[0].data = [];
+            chart.update();
+            currentBinID = null;
+            $('#current-level').text(" ");
+        });
+    
+        initWebSocket();
+    
+        // Load saved bins from localStorage on page load
+        const savedBins = JSON.parse(localStorage.getItem('bins')) || [];
+        if (savedBins.length > 0) {
+            savedBins.forEach((binID) => {
+                createOrUpdateBinButton(binID);
+            });
+    
+            const firstBinID = savedBins[0];
+            currentBinID = firstBinID;
+            updateChart(firstBinID);
+            updateCleanlinessOptions(firstBinID);
+        } else {
+            console.log("No bins saved in localStorage.");
+        }
+    });
+</script>
+
+    </script>
+    </body>
+    </html>
