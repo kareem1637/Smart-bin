@@ -11,8 +11,8 @@ def generate_dummy_data():
 
     return {
         "bin level": str(bin_level),
-        "modelPrediction": model_prediction,
-        "ID": str(bin_id)
+        "model prediction": model_prediction,
+        "bin ID": str(bin_id)
     }
 
 # Function to send data to the web app
@@ -49,7 +49,7 @@ async def handler(websocket, path):
 # Start the server
 print("Server started on ws://172.31.80.1:8080")
 
-start_server = websockets.serve(handler, "172.31.80.1", 8080)
+start_server = websockets.serve(handler, "192.168.1.104", 8080)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
