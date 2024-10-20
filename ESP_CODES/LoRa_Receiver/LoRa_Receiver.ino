@@ -74,7 +74,7 @@ void webSocketEvent(const uint8_t& num, const WStype_t& type, uint8_t* payload, 
       }
 
     case WStype_TEXT:
-      Serial.printf("[%u] get Text: %s\n", num, payload);
+      //Serial.printf("[%u] get Text: %s\n", num, payload);
       webSocket.sendTXT(num, "Connected");
       break;
 
@@ -94,20 +94,24 @@ void loop() {
 }
 
 void parseAndSend(const String& message) {
-  // Find comma positions
+  // Find equal sign and comma positions
   int equal_Index = message.indexOf('=');
   int firstComma = message.indexOf(',');
   int secondComma = message.indexOf(',', firstComma + 1);
   int thirdComma = message.indexOf(',', secondComma + 1);
 
-  if (firstComma != -1 && secondComma != -1 && thirdComma != -1 && equal_Index != -1) {
-    // Extract message content
+  // Ensure that necessary indices exist
+  if (equal_Index != -1 && firstComma != -1 && secondComma != -1 && thirdComma != -1) {
+    // Extract message components
     String lengthStr = message.substring(firstComma + 1, secondComma);
     String data = message.substring(secondComma + 1, thirdComma);
     String ID = message.substring(equal_Index + 1, firstComma);
-    // Extract bin level and model prediction
+    lengthStr.trim();
+    data.trim();
+    ID.trim();
+    // Proceed only if "Bin Level" exists in the data string
     if (data.indexOf("Bin") != -1) {
-      // Create a JSON document
+      // Create a JSON document for WebSocket and WhatsApp message
       StaticJsonDocument<200> doc;
 
       // Extract bin level
@@ -115,24 +119,41 @@ void parseAndSend(const String& message) {
       int binLevelEnd = data.indexOf('%', binLevelStart);
       String binLevel = data.substring(binLevelStart, binLevelEnd);
       binLevel.trim();
-
-      // Extract model prediction
+      // Extract model prediction (clean/dirty) and dirtiness percentage
       int modelPredictionStart = data.indexOf("modelPrediction:") + 16;
-      int modelPredictionEnd = data.indexOf(',', modelPredictionStart);
+      int modelPredictionEnd = data.indexOf("with", modelPredictionStart);
       String modelPrediction = data.substring(modelPredictionStart, modelPredictionEnd);
-      modelPrediction.trim();
-      ID.trim();
+       modelPrediction.trim();
+      int percentageStart = data.indexOf("precntage of") + 12;
+      int percentageEnd = data.indexOf('%', percentageStart);
+      String dirtiness = data.substring(percentageStart, percentageEnd);
+      dirtiness.trim();
+      // Extract model prediction status (clean/dirty)
+      int space_index = modelPrediction.indexOf(' ');
+      String status = modelPrediction.substring(0, space_index);
+
+      // Retrieve bin location based on the bin ID
+      String Location = BinLocation(ID);
 
       // Populate the JSON document
       doc["bin level"] = binLevel;
-      doc["model prediction"] = modelPrediction;
-      doc["bin ID"] = ID;
-      Serial.printf(" %s , %s , %s \n", binLevel.c_str(), modelPrediction.c_str(), ID.c_str());
-      // Create the message string
-      String message = "Bin Level: " + binLevel + ", Prediction: " + modelPrediction + ", ID: " + ID;
+      doc["model prediction"] = status;
+      doc["dirtiness"] = dirtiness + "%";
+      doc["bin Location"] = Location;
+
+      // Log extracted values
+      Serial.printf("Bin Level: %s, Model Prediction: %s, Dirtiness: %s, Bin ID: %s\n", 
+                    binLevel.c_str(), status.c_str(), dirtiness.c_str(), ID.c_str());
+
+      // Create the message string for WhatsApp
+      String message = "Bin Location: " + Location + "\n" +
+                       "Bin Level: " + binLevel + "%\n" +
+                       "Bin Surrounding: " + status + "\n" +
+                       "Dirtiness: " + dirtiness + "%";
 
       // Send WhatsApp message
       sendWhatsAppMessage(phoneNumber1, message.c_str());
+
       // Serialize JSON document to string
       String jsonString;
       serializeJson(doc, jsonString);
@@ -140,7 +161,7 @@ void parseAndSend(const String& message) {
       // Broadcast JSON string via WebSocket
       webSocket.broadcastTXT(jsonString);
 
-      // Send acknowledgment back to sender
+      // Send acknowledgment back to sender via LoRa
       String ackCommand = "ACK";
       lora.println("AT+SEND=2," + String(ackCommand.length()) + "," + ackCommand);
     } else {
@@ -148,6 +169,19 @@ void parseAndSend(const String& message) {
     }
   } else {
     Serial.println("Error parsing message.");
+  }
+}
+
+
+String BinLocation(String ID){
+  String Location_1="Tharapi_home";
+  //you can add new location and add else if with new ID 
+  if (ID=="2"){
+    return Location_1;
+
+  }
+  else {
+    return "NO BIN found for this ID";
   }
 }
 

@@ -28,7 +28,7 @@ test_clean_dir = 'D:/Smart bin/dataset/val/clean'
 test_dirty_dir = 'D:/Smart bin/dataset/val/dirty'
 
 # Number of images to sample
-sample_size = 100
+sample_size = 150
 
 # Move 100 images from 'clean' and 'dirty' folders to corresponding test folders
 take_random_sample(train_clean_dir, test_clean_dir, sample_size)

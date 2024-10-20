@@ -1,3 +1,7 @@
 /.venv
 /.vscode
 /IOT_PART1.zip
+/dataset
+*.zip
+
+*.txt

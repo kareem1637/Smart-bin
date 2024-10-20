@@ -3,8 +3,6 @@
 
 // Sleep durations in microseconds
 #define SLEEP_12h 43200000000ULL  // 12 hours
-#define SLEEP_1h 3600000000ULL    // 1 hour
-#define SLEEP_5m 300000000ULL     // 5 minutes
 #define SLEEP_1m 60000000ULL      // 1 minute
 
 // Camera model
@@ -19,7 +17,7 @@ esp_now_peer_info_t peerInfo;  // Peer info structure
 
 // Size of a single packet for ESP-NOW
 typedef struct struct_message {
-  char data[20];  // Data buffer for messages
+  char data[50];  // Data buffer for messages
 } struct_message;
 
 struct_message Sent_Data;  // Model pred data to sent
@@ -28,14 +26,12 @@ bool sleepSignal = false;
 bool Send_pred = false;
 // Global variables
 int pictureNumber = 0;      // Current picture number
-//String quantizedPath = "";  // Path for quantized files
-//String rgb888Path = "";     // Path for RGB888 files
-//File rgb888File;            // File object for RGB888
-//File quantizedFile;         // File object for quantized data
+String rgb888Path = "";     // Path for RGB888 files
+File rgb888File;            // File object for RGB888
 camera_fb_t* fb = NULL;     // Frame buffer for camera
 // Model parameters
-constexpr int kNumCols = 96;
-constexpr int kNumRows = 96;
+constexpr int kNumCols = 240;
+constexpr int kNumRows = 240;
 constexpr int kNumChannels = 3;
 constexpr int kMaxImageSize = kNumCols * kNumRows * kNumChannels;
 namespace {
@@ -46,7 +42,7 @@ TfLiteTensor* input = nullptr;
 TfLiteTensor* output = nullptr;
 }
 // Memory allocation for the model's intermediate arrays
-constexpr int kTensorArenaSize = 300 * 1024;
+constexpr int kTensorArenaSize = 1500000;
 static uint8_t* tensor_arena = nullptr;
 // Initialization functions
 
@@ -102,7 +98,7 @@ void init_EspNow() {
     return;
   }
 }
-/*
+
 // Initialize the SD Card
 void init_SD() {
   // Attempt to initialize the SD card
@@ -121,6 +117,7 @@ void init_SD() {
 
   Serial.println("SD Card initialized successfully.");
 }
+
 // Initialize EEPROM
 void init_EEPROM() {
   // Initialize EEPROM with 1 byte size
@@ -135,7 +132,7 @@ void init_EEPROM() {
     EEPROM.write(0, pictureNumber);  // Save the updated picture number to EEPROM
     EEPROM.commit();                 // Ensure the changes are written to EEPROM
   }
-}*/
+}
 void initializeTensorFlowModel(const unsigned char TF_LITE_MODEL_data[]) {
   // Load model
   model = tflite::GetModel(TF_LITE_MODEL_data);
@@ -201,7 +198,7 @@ void initializeTensorFlowModel(const unsigned char TF_LITE_MODEL_data[]) {
 
 // Capture image and open files
 void captureAndOpenFiles() {
-  /*// Update file paths with current pictureNumber
+  // Update file paths with current pictureNumber
   String basePath = "/picture" + String(pictureNumber);
   rgb888Path = basePath + "_888.txt";  // RGB888 file path
 
@@ -212,7 +209,7 @@ void captureAndOpenFiles() {
     Serial.println("Failed to open RGB888 file for writing");
     return;
   }
-*/
+
   // Skip the first two images to avoid bad frames
   for (int i = 0; i < 2; i++) {
     fb = esp_camera_fb_get();

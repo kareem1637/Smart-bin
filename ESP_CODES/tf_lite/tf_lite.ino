@@ -27,12 +27,13 @@ void setup() {
   // Start serial communication and initialize camera
   Serial.begin(115200);
   init_camera();
-  delay(500);
- // init_EEPROM();
+  delay(1000);
+  init_EEPROM();
+
   delay(100);
   init_EspNow();
   delay(100);
-  //init_SD();
+  init_SD();
   initializeTensorFlowModel(TF_LITE_MODEL_data);
 }
 
@@ -42,15 +43,15 @@ void loop() {
     captureAndOpenFiles();
     if (fb) {
       int8_t* image_data = input->data.int8;  // input is (1, 96, 96, 3) - RGB image, size(96,96)
-      if (!preprocess_image(fb->buf, fb->len,image_data, kMaxImageSize)) {
+      if (!preprocess_image(fb->buf, fb->len, rgb888File, image_data, kMaxImageSize)) {
         Serial.println("Image preprocessing failed!");
         return;
       }
       // Update and save picture number in EEPROM
-     /* pictureNumber++;
+      pictureNumber++;
       EEPROM.write(0, pictureNumber);  // Save updated picture number
       EEPROM.commit();                 // Ensure EEPROM commit
-      rgb888File.close();*/
+      rgb888File.close();
       esp_camera_fb_return(fb);
       fb = nullptr;  // Reset pointer after use
       // Invoke the interpreter
@@ -67,6 +68,7 @@ void loop() {
       } else {
         pred = "clean";
       }
+      pred=pred+" with precntage of "+ String(score)+"%";
       Serial.printf("The area is: %s, and the MODEL score: %f\n", pred.c_str(), score);
       strcpy(Sent_Data.data, pred.c_str());
       // Send message via ESP-NOW

@@ -15,8 +15,11 @@
 void setup() {
     Serial.begin(115200);
     init_camera();
+    delay(500);
     init_SD();
-    
+    delay(100);
+    init_EEPROM();
+    delay(100);
 
 }
 

@@ -8,26 +8,40 @@
   File quantizedFile;
   camera_fb_t* fb = NULL;
 
+// Initialize the SD Card
 void init_SD() {
-    // Initialize SD Card
-    if (!SD_MMC.begin()) {
-        Serial.println("SD Card Mount Failed");
-        return;
-    }
-    uint8_t cardType = SD_MMC.cardType();
-    if (cardType == CARD_NONE) {
-        Serial.println("No SD Card attached");
-        return;
-    }
+  // Attempt to initialize the SD card
+  if (!SD_MMC.begin("/sdcard", true)) {
+    Serial.println("SD Card Mount Failed");
+    return;
+  }
+
+  uint8_t cardType = SD_MMC.cardType();
+
+  // Check if an SD card is actually attached
+  if (cardType == CARD_NONE) {
+    Serial.println("No SD Card attached");
+    return;
+  }
+
+  Serial.println("SD Card initialized successfully.");
 }
 
+// Initialize EEPROM
 void init_EEPROM() {
-    // Initialize EEPROM with predefined size
-    EEPROM.begin(1);
-    EEPROM.write(0, pictureNumber);  // Save the updated picture number to EEPROM
-    EEPROM.commit();  // Ensure the changes are written to EEPROM  // Read the last saved picture number from EEPROM
-}
+  // Initialize EEPROM with 1 byte size
+  EEPROM.begin(1);
 
+  // Reset pictureNumber during development
+  pictureNumber = 0;  // Comment this line when deploying the final version
+
+  // Only write if the picture number has changed to reduce unnecessary writes
+  int savedPictureNumber = EEPROM.read(0);
+  if (savedPictureNumber != pictureNumber) {
+    EEPROM.write(0, pictureNumber);  // Save the updated picture number to EEPROM
+    EEPROM.commit();                 // Ensure the changes are written to EEPROM
+  }
+}
 void captureAndOpenFiles() {
     // Update file paths with current pictureNumber
     String basePath = "/picture" + String(pictureNumber);

@@ -10,16 +10,12 @@ ser = serial.Serial(
 
 # The messages to be sent
 messages = [
-    "+RCV=1, 5, Bin Level: 71% modelPrediction: dirty,-99, 40",
-    "+RCV=2, 5, Bin Level: 20% modelPrediction: clean,-99, 40",
-    "+RCV=3, 5, Bin Level: 35% modelPrediction: dirty,-99, 40",
-    "+RCV=3, 5, Bin Level: 80% modelPrediction: failed ,-99, 40",
-    "+RCV=5, 5, Bin Level: 100% modelPrediction: clean ,-99, 40"
-    "+RCV=1, 5, Bin Level: 71% modelPrediction: dirty,-99, 40",
-    "+RCV=2, 5, Bin Level: 40% modelPrediction: clean,-99, 40",
-    "+RCV=3, 5, Bin Level: 35% modelPrediction: dirty,-99, 40",
-    "+RCV=3, 5, Bin Level: 23% modelPrediction: failed ,-99, 40",
-    "+RCV=5, 5, Bin Level: 28% modelPrediction: clean ,-99, 40"
+    "+RCV=2, 5, Bin Level: 100% modelPrediction: dirty with precntage of 0.55%,-99, 40",
+    "+RCV=2, 5, Bin Level: 100% modelPrediction: clean with precntage of 0.04%,-99, 40",
+    "+RCV=2, 5, Bin Level: 100% modelPrediction: dirty with precntage of 0.24%,-99, 40",
+    "+RCV=2, 5, Bin Level: 100% modelPrediction: dirty with precntage of 0.14% ,-99, 40",
+    "+RCV=2, 5, Bin Level: 100% modelPrediction: clean with precntage of 0.04% ,-99, 40"
+    "+RCV=2, 5, Bin Level: 100% modelPrediction: clean with precntage of 0.28%,-99, 40",
 ]
 
 print("Sending messages...")

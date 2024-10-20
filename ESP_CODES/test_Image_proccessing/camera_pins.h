@@ -46,7 +46,7 @@ void init_camera() {
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_RGB565;  // Using RGB888
   config.fb_location = CAMERA_FB_IN_PSRAM;
-  config.frame_size = FRAMESIZE_96X96; // Set to 96x96 resolution
+  config.frame_size = FRAMESIZE_240X240; // Set to 96x96 resolution
   config.jpeg_quality = 20;
   config.fb_count = 1;
   // Check for PSRAM and set quality and buffer count

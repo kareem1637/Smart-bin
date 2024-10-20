@@ -20,7 +20,7 @@ esp_now_peer_info_t peerInfo;
 
 // Size of a single packet for ESP-NOW
 typedef struct struct_message {
-  char data[20];  // Data buffer for messages
+  char data[50];  // Data buffer for messages
 } struct_message;
 
 // String to hold the status message

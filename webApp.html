@@ -367,18 +367,18 @@
 
     // Event handler for receiving messages
     socket.onmessage = function (event) {
-        console.log('Message received:', event.data);
+
+  
 
         // Check if the message is a connection acknowledgment
         if (event.data === "Connected") {
-            console.log("Heartbeat acknowledgment received");
             clearTimeout(heartbeatTimeout);
             sendHeartbeat(); // Send the heartbeat
         } else {
             try {
                 // Parse the incoming message
                 const message = JSON.parse(event.data);
-
+                console.log('Message received:', event.data);
                 // Get current timestamp
                 const now = new Date();
                 const date = now.toLocaleDateString('en-GB');
@@ -392,7 +392,7 @@
                 // Extract values from the message
                 const value = parseFloat(message["bin level"]);
                 const modelPrediction = message["model prediction"]; // Fix the key according to your JSON structure
-                const ID = message["bin ID"]; // Fix the key according to your JSON structure
+                const ID = message["bin Location"]; // Fix the key according to your JSON structure
 
                 // Save data for the specific bin ID
                 saveDataToLocalStorage(timestamp, value, ID, modelPrediction);
@@ -427,7 +427,7 @@
 function sendHeartbeat() {
     if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ type: "heartbeat" }));
-        console.log("Heartbeat sent");
+
         heartbeatTimeout = setTimeout(function () {
             console.log("Heartbeat timeout, reconnecting...");
             socket.close(); // Close the socket to trigger the onclose event

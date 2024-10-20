@@ -1,6 +1,6 @@
 #ifndef PREPROCESSING_H
 #define PREPROCESSING_H
-bool preprocess_image(uint8_t *buf, size_t len, int8_t *image_data,int kMaxImageSize) {
+bool preprocess_image(uint8_t *buf, size_t len, File &rgb888File, int8_t *image_data,int kMaxImageSize) {
   int index = 0;
   for (size_t i = 0; i < len; i += 2) {
     uint16_t rgb565 = buf[i + 1] | (buf[i] << 8);
@@ -16,7 +16,7 @@ bool preprocess_image(uint8_t *buf, size_t len, int8_t *image_data,int kMaxImage
     b = (b * 255) / 31; 
 
     // Save RGB888 data to the file
-   // rgb888File.printf("%03d %03d %03d\n", r, g, b);
+    rgb888File.printf("%03d %03d %03d\n", r, g, b);
 
     // Normalize and quantize the image data to int8 [-128, 127]
     float normalized_r = (r / 127.5f) - 1.0f;
