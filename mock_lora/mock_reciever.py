@@ -10,7 +10,7 @@ ser = serial.Serial(
 
 # The messages to be sent
 messages = "+RCV=50, 5, ACK ,-99, 40"
-
+messages2=  "+RCV=2,8,84223000,-99, 40",
 
 
 i = 0
@@ -22,6 +22,9 @@ try:
         if response != "":
             # send confirm message
             text = messages
+            ser.write(text.encode('utf-8'))
+            print(f"Sent: {text}")
+            text=messages2
             ser.write(text.encode('utf-8'))
             print(f"Sent: {text}")
 

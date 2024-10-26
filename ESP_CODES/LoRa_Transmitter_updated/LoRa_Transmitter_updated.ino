@@ -5,11 +5,12 @@
 #include <esp_wifi.h>
 
 // Sleep durations in microseconds
-#define SLEEP_12h 43200000000ULL  // 12 hours
-#define SLEEP_1h 3600000000ULL    // 1 hour
-#define SLEEP_5m 300000000ULL     // 5 minutes
-#define SLEEP_1m 60000000ULL      // 1 minute
-
+#define SLEEP_12h 43200000000ULL          // 12 hours
+#define SLEEP_1h 3600000000ULL            // 1 hour
+#define SLEEP_5m 300000000ULL             // 5 minutes
+#define SLEEP_1m 60000000ULL              // 1 minute
+unsigned long long sleepTime = SLEEP_1m;  //set 1 min as defalut sleeping time
+bool sleepFlag = false;                   // flag to indicate that the time for sleep is received;
 // Set your ESP32 MAC Address
 uint8_t espMACAddress[] = { 0x32, 0xAE, 0xA4, 0x07, 0x0D, 0x66 };
 // ESP-CAM MAC Address
@@ -20,14 +21,17 @@ esp_now_peer_info_t peerInfo;
 
 // Size of a single packet for ESP-NOW
 typedef struct struct_message {
-  char data[50];  // Data buffer for messages
+  char data[100];  // Data buffer for messages
 } struct_message;
 
 // String to hold the status message
 String modelPrediction;
 bool predictionReceived = false;
+bool ack = false;
 struct_message received_Data;  // Model prediction
 struct_message espNowSignal;   // Signal to be sent to get the model prediction or to go to sleep
+struct_message timerSignal;   // Signal to be sent to set the sleep timer for esp-cam
+
 bool isSent = false;
 // Callback function that will be executed when data is received
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
@@ -113,23 +117,26 @@ void setup() {
   predictionReceived = false;  // Reset prediction received flag
   Serial.println("setup complete");
   sendSignal("Send_Data");
+  ack = false;
+  sleepFlag = false;
 }
 
 void loop() {
-  bool ack = false;
   // Wait for acknowledgment
-  while (!ack && predictionReceived) {
+  if (!ack && predictionReceived) {
     String binInfoCommand = getBinINFO();
     String message = "AT+SEND=" + lora_RX_address + "," + String(binInfoCommand.length()) + "," + binInfoCommand + "\r\n";
     lora.print(message);
     Serial.print(message);
-    //ack = waitForAck();
-  ack=true;
+    ack = waitForAck();
+    //ack=true;
+    Serial.println("waiting for sleep timer");
+    sleepFlag = waitFor_sleepTimer();
     // If acknowledged, send signal to sleep
-    if (ack) {
-      sendSignal("Sleep");
-      goToSleep();
-    }
+  }
+  if (ack && sleepFlag) {
+    sendSignal("Sleep");
+    goToSleep();
   }
 }
 
@@ -166,8 +173,8 @@ String getBinINFO() {
   // Determine average bin level
   int binLevel1 = getTankLevel(distanceBin1);
   //int binLevel2 = getTankLevel(distanceBin2);
-  //int averageBinLevel = (binLevel1 + binLevel2) / 2; //avg for two sensor 
-  int averageBinLevel = (binLevel1 );//abg for one sensor
+  //int averageBinLevel = (binLevel1 + binLevel2) / 2; //avg for two sensor
+  int averageBinLevel = (binLevel1);  //abg for one sensor
   // Construct binInfoCommandstring
   String binInfoCommand = "Bin Level: " + String(averageBinLevel) + "%" + " modelPrediction: " + modelPrediction;
   return binInfoCommand;
@@ -175,10 +182,10 @@ String getBinINFO() {
 
 // Put ESP32 into deep sleep
 void goToSleep() {
-  esp_sleep_enable_timer_wakeup(SLEEP_1m);  // Wake up after 1 minute
-
-  Serial.println("Going to sleep now");
+  esp_sleep_enable_timer_wakeup(sleepTime);  // Wake up after 1 minute
   delay(100);  // Allow time for Serial to flush
+  printSleepTime(sleepTime);
+  sleepFlag = false;
   esp_deep_sleep_start();
 }
 
@@ -197,6 +204,42 @@ bool waitForAck() {
   }
   return false;  // Timeout, return true if ACK not received
 }
+bool waitFor_sleepTimer() {
+  while (!lora.available()) {
+  }
+  String message = lora.readString();
+  // Find equal sign and comma positions
+  int equal_Index = message.indexOf('=');
+  int firstComma = message.indexOf(',');
+  int secondComma = message.indexOf(',', firstComma + 1);
+  int thirdComma = message.indexOf(',', secondComma + 1);
+
+  // Ensure that necessary indices exist
+  if (equal_Index != -1 && firstComma != -1 && secondComma != -1 && thirdComma != -1) {
+    String data = message.substring(secondComma + 1, thirdComma);
+    data.trim();
+    char *endPtr;
+    sleepTime = strtoull(data.c_str(), &endPtr, 10);
+    if (endPtr == data.c_str()) {
+      Serial.println("Conversion failed, using default sleep time.");
+      sleepTime = SLEEP_1m;  // Default value
+    }
+    // Now you can use receivedSleepTime as needed
+    Serial.printf("Received sleep time: %llu microseconds\n", sleepTime);
+ 
+    strcpy(timerSignal.data, data.c_str());
+    esp_err_t result = esp_now_send(espCamMACAddress, (uint8_t *)&timerSignal, sizeof(timerSignal));
+     delay(100);
+  if (result == ESP_OK) {
+    Serial.println("Sent timer with success");
+  } else {
+    Serial.println("Error sending the timer");
+  }
+     
+    return true;
+  }
+}
+
 
 // Send signal via ESP-NOW
 void sendSignal(String text) {
@@ -205,9 +248,9 @@ void sendSignal(String text) {
   Serial.println("Sending " + text);
   delay(100);
   if (result == ESP_OK) {
-    Serial.println("Sent with success");
+    Serial.println("Sent  siganl with success");
   } else {
-    Serial.println("Error sending the data");
+    Serial.println("Error sending the signal");
   }
   /* If the message fails to send, it indicates that the ESP32-CAM is not yet ready to receive the message. 
    In this case, we will retry after 2 seconds, up to 3 attempts. 
@@ -228,3 +271,27 @@ void sendSignal(String text) {
     Serial.println("Failed to receive prediction after 3 attempts.");
   }
 }
+
+// Function to convert microseconds to hours, minutes, and seconds
+void printSleepTime(unsigned long long microseconds) {
+  int hours, minutes, seconds;
+
+  // Constants for conversion
+  const unsigned long long MICROSECONDS_IN_A_SECOND = 1000000;
+  const unsigned long long SECONDS_IN_A_MINUTE = 60;
+  const unsigned long long MINUTES_IN_AN_HOUR = 60;
+
+  // Calculate total seconds
+  unsigned long long totalSeconds = microseconds / MICROSECONDS_IN_A_SECOND;
+
+  // Calculate hours, minutes, and seconds
+  hours = totalSeconds / (SECONDS_IN_A_MINUTE * MINUTES_IN_AN_HOUR);
+  minutes = (totalSeconds % (SECONDS_IN_A_MINUTE * MINUTES_IN_AN_HOUR)) / SECONDS_IN_A_MINUTE;
+  seconds = totalSeconds % SECONDS_IN_A_MINUTE;
+
+  // Print the result
+  Serial.printf("Going to sleep now for %d Hours, %d Minutes, and %d Seconds \n", hours, minutes, seconds);
+}
+  
+
+
